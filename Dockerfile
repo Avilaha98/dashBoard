@@ -1,14 +1,14 @@
-# Use official Tomcat base image (choose compatible version)
-FROM tomcat:9.0-jdk17-temurin
+# Use the official Tomcat 10 image as the base
+FROM tomcat:10.1.40-jdk17
 
-# Remove default ROOT application (optional)
+# Remove the default ROOT web application (optional)
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
 
-# Copy your WAR to the webapps directory of Tomcat
-COPY target/dashboard-app.war /usr/local/tomcat/webapps/dashboard-app.war
+# Copy your WAR file into Tomcat's webapps folder with its custom name
+COPY target/dashBoard.war /usr/local/tomcat/webapps/dashBoard.war
 
-# Expose port 8080
+# Expose Tomcat's HTTP port
 EXPOSE 8080
 
-# Start Tomcat
+# Run Tomcat in the background
 CMD ["catalina.sh", "run"]

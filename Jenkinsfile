@@ -7,10 +7,10 @@ pipeline {
     }
 
     environment {
-        IMAGE_NAME = 'spring-boot-tomcat'
-        CONTAINER_NAME = 'dashboard-container'
-        HOST_PORT = '9090'
-        CONTAINER_PORT = '8080'
+        IMAGE_NAME      = 'spring-boot-tomcat'
+        CONTAINER_NAME  = 'dashboard-container'
+        HOST_PORT       = '9090'
+        CONTAINER_PORT  = '8080'
     }
 
     stages {
@@ -32,7 +32,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image..."
-                sh "docker build -t ${IMAGE_NAME} ."
+                script {
+                    try {
+                        sh "docker build -t ${IMAGE_NAME} ."
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        throw e
+                    }
+                }
             }
         }
 
@@ -49,7 +56,14 @@ pipeline {
         stage('Run New Container') {
             steps {
                 echo "🚀 Running new container..."
-                sh "docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
+                script {
+                    try {
+                        sh "docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        throw e
+                    }
+                }
             }
         }
     }
@@ -60,6 +74,11 @@ pipeline {
         }
         failure {
             echo '❌ Deployment failed.'
+            // Add further cleanup or notifications here if needed.
+        }
+        always {
+            echo "🧹 Cleanup actions (if any)"
+            // Optionally perform cleanup or send notifications
         }
     }
 }

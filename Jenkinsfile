@@ -9,32 +9,21 @@ pipeline {
     }
 
     stages {
-
-        stage('Clone from Git') {
-            steps {
-                echo '📥 Cloning repository...'
-                checkout scm
-            }
-        }
-
         stage('Build WAR with Maven') {
             steps {
                 echo '🔧 Building WAR file...'
-                sh 'mvn clean package -DskipTests'
+                script {
+                    docker.image('maven:3.9.6-eclipse-temurin-17').inside {
+                        sh 'mvn clean package -DskipTests'
+                    }
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Building Docker image..."
-                script {
-                    try {
-                        sh "docker build -t ${IMAGE_NAME} ."
-                    } catch (Exception e) {
-                        currentBuild.result = 'FAILURE'
-                        throw e
-                    }
-                }
+                sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
@@ -51,14 +40,7 @@ pipeline {
         stage('Run New Container') {
             steps {
                 echo "🚀 Running new container..."
-                script {
-                    try {
-                        sh "docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
-                    } catch (Exception e) {
-                        currentBuild.result = 'FAILURE'
-                        throw e
-                    }
-                }
+                sh "docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
             }
         }
     }
@@ -69,9 +51,6 @@ pipeline {
         }
         failure {
             echo '❌ Deployment failed.'
-        }
-        always {
-            echo "🧹 Cleanup actions (if any)"
         }
     }
 }

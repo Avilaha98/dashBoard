@@ -1,39 +1,44 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'maven:3.9.6-eclipse-temurin-17'
+            args '-v /var/run/docker.sock:/var/run/docker.sock' // To allow Docker commands
+        }
+    }
 
     environment {
-        IMAGE_NAME = 'spring-boot-tomcat'   // Updated image name
+        IMAGE_NAME = 'spring-boot-tomcat'
         CONTAINER_NAME = 'dashboard-container'
-        HOST_PORT = '9090'                  // Running on port 9090
-        CONTAINER_PORT = '8080'             // Tomcat default port
+        HOST_PORT = '9090'
+        CONTAINER_PORT = '8080'
     }
 
     stages {
 
         stage('Clone from Git') {
             steps {
-                echo 'Cloning repository...'
+                echo '📥 Cloning repository...'
                 checkout scm
             }
         }
 
         stage('Build WAR with Maven') {
             steps {
-                echo 'Building the project...'
+                echo '🔧 Building WAR file...'
                 sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
+                echo "🐳 Building Docker image..."
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
         stage('Stop Previous Container') {
             steps {
-                echo "Stopping and removing old container (if exists)..."
+                echo "🛑 Stopping and removing old container (if exists)..."
                 sh """
                     docker stop ${CONTAINER_NAME} || true
                     docker rm ${CONTAINER_NAME} || true
@@ -43,7 +48,7 @@ pipeline {
 
         stage('Run New Container') {
             steps {
-                echo "Running new container..."
+                echo "🚀 Running new container..."
                 sh "docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${IMAGE_NAME}"
             }
         }

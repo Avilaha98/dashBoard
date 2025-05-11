@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.9.6-eclipse-temurin-17'
-            args '-v /var/run/docker.sock:/var/run/docker.sock' // To allow Docker commands
-        }
-    }
+    agent any
 
     environment {
         IMAGE_NAME      = 'spring-boot-tomcat'
@@ -74,11 +69,9 @@ pipeline {
         }
         failure {
             echo '❌ Deployment failed.'
-            // Add further cleanup or notifications here if needed.
         }
         always {
             echo "🧹 Cleanup actions (if any)"
-            // Optionally perform cleanup or send notifications
         }
     }
 }
